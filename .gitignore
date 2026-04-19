@@ -29,4 +29,6 @@ temp_uploads/
 ocr_raw_*.txt
 result_*.json
 share/
-static/
+
+# NOTE: The 'static' folder is NOT ignored as it contains webpage content.
+# static/
