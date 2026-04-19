@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+python-multipart
+Pillow
+requests
+pandas
+python-dotenv
+google-genai
+pymupdf
+accelerate
+zai-sdk

@@ -1,0 +1,32 @@
+# Environment variables
+.env
+
+# Large model files
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.onnx
+
+# Specific heavy folders
+PACE/
+GLM-OCR/
+LightOnOCR-2-1B/
+
+# Python specific
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+
+# Project temporary and output files
+backups/
+temp_uploads/
+ocr_raw_*.txt
+result_*.json
+share/
+static/
