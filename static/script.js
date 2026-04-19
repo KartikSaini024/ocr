@@ -240,8 +240,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Generate cards for each key-value pair
         for (const [key, value] of Object.entries(displayData)) {
-            // Skip empty values or raw text if we successfully mapped
-            if (!value) continue;
             if (key === 'raw_text' && !isError) continue;
             
             const isRawText = key.includes('Raw Text');
@@ -251,7 +249,15 @@ document.addEventListener('DOMContentLoaded', () => {
             card.className = isRawText ? 'result-card raw-text-card' : 'result-card';
             
             let displayValue = value;
-            if (pdlValueMapping[key] && pdlValueMapping[key][String(value)]) {
+            let valStyle = "";
+            
+            if (value === 'NOT_EXTRACTED') {
+                displayValue = `<span style="color: var(--warning); font-style: italic;">Not picked up by OCR</span>`;
+                card.style.borderColor = 'var(--warning)';
+                card.style.background = 'rgba(245, 158, 11, 0.05)';
+            } else if (value === null || value === "") {
+                displayValue = `<span style="color: var(--text-muted); font-style: italic;">Blank / Not Provided</span>`;
+            } else if (pdlValueMapping[key] && pdlValueMapping[key][String(value)]) {
                 displayValue = `${value} (${pdlValueMapping[key][String(value)]})`;
             }
 

@@ -211,8 +211,10 @@ def get_structure_prompt(ocr_text: str, pdl_context: str) -> str:
         - If a field has 'normalization' codes (e.g., "1 = Male", "ACT = Australian Capital Territory"), 
           convert the extracted text/selection to the normalized Export Code (e.g., "1", "ACT").
         - If a field is 'Free text', keep the original text but ensure it's clean.
-        - IF you cannot find a value for a particular reference number, value it as null, but ensure all reference numbers are in the JSON as per the PDL.
-        - In the end, add a field "processing_confidence" with a value between 0-100, based on the OCR text quality and PDL compliance.
+        - STRICT RULE: You MUST return EVERY SINGLE reference number from the PDL in your final JSON output, without exception.
+        - If the OCR text does NOT contain ANY evidence or data for a reference number (i.e. the OCR missed it entirely), set the value to EXACTLY the string "NOT_EXTRACTED".
+        - If the OCR text shows the field exists but it was left intentionally blank by the patient, set the value to null.
+        - For the "processing_confidence", calculate a score between 0-100. Deduct points heavily for every "NOT_EXTRACTED" value. A perfect extraction of all available data is 100.
         
         PDL REFERENCE:
         {pdl_context}
