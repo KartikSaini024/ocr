@@ -20,17 +20,28 @@ def parse_import_export_codes(codes_str):
     mapping = {}
     if not codes_str:
         return mapping
-    # Split by comma or newline, but be careful with commas inside labels if any
-    # Usually they are "val = label, val = label" or "val = label\nval = label"
+    
     import re
-    parts = re.split(r'[,\n]', codes_str)
-    for part in parts:
-        if "=" in part:
-            try:
-                val, label = part.split("=", 1)
-                mapping[val.strip()] = label.strip()
-            except:
-                continue
+    # Robust pattern to match "Key = Value"
+    # Matches a key (word/number/slashes), an '=', and then the value.
+    # The value stops before the next "Key =" pattern or the end of the string.
+    pattern = r'([\w\d/.-]+)\s*=\s*(.*?)(?=\s+[\w\d/.-]+\s*=|(?<!\w)$)'
+    
+    # We remove newlines and extra spaces to normalize the string for the regex
+    # but keep a space to separate potential fields
+    clean_str = codes_str.replace('\n', ' ').replace(',', ' ')
+    
+    matches = re.finditer(pattern, clean_str)
+    for m in matches:
+        key = m.group(1).strip()
+        val = m.group(2).strip()
+        if key and val:
+            mapping[key] = val
+            
+    # Fallback for simple single-line values without '=' if any
+    if not mapping and "=" not in codes_str:
+        return codes_str
+        
     return mapping
 
 def load_mapping():

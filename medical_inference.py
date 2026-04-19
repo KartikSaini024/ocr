@@ -35,6 +35,10 @@ class OCRProvider(ABC):
     def run_ocr(self, image: Image.Image) -> str:
         pass
 
+    @abstractmethod
+    def run_ocr_batch(self, images: list[Image.Image]) -> list[str]:
+        pass
+
 class LLMProvider(ABC):
     @property
     @abstractmethod
@@ -80,29 +84,42 @@ class LightOnOCR(OCRProvider):
             raise e
 
     def run_ocr(self, image: Image.Image) -> str:
+        return self.run_ocr_batch([image])[0]
+
+    def run_ocr_batch(self, images: list[Image.Image]) -> list[str]:
         self.load()
         
-        # Resize for optimal OCR performance
-        max_size = 1540
-        if max(image.size) > max_size:
-            ratio = max_size / max(image.size)
-            new_size = (int(image.width * ratio), int(image.height * ratio))
-            image = image.resize(new_size, Image.LANCZOS)
+        processed_images = []
+        for img in images:
+            # Resize for optimal OCR performance
+            max_size = 1540
+            if max(img.size) > max_size:
+                ratio = max_size / max(img.size)
+                new_size = (int(img.width * ratio), int(img.height * ratio))
+                img = img.resize(new_size, Image.LANCZOS)
+            processed_images.append(img)
 
         prompt_text = "Analyze this medical document. Extract all visible text accurately."
-        conversation = [
-            {"role": "user", "content": [{"type": "image"}, {"type": "text", "text": prompt_text}]}
+        
+        # Prepare batch conversations
+        conversations = [
+            [{"role": "user", "content": [{"type": "image"}, {"type": "text", "text": prompt_text}]}]
+            for _ in processed_images
         ]
         
-        prompt = self.processor.apply_chat_template(conversation, add_generation_prompt=True, tokenize=False)
-        inputs = self.processor(text=prompt, images=image, return_tensors="pt")
+        prompts = [
+            self.processor.apply_chat_template(conv, add_generation_prompt=True, tokenize=False)
+            for conv in conversations
+        ]
+        
+        inputs = self.processor(text=prompts, images=processed_images, return_tensors="pt", padding=True)
         inputs = {k: v.to(device=self.device, dtype=self.dtype) if torch.is_tensor(v) and v.is_floating_point() else v.to(self.device) for k, v in inputs.items()}
         
-        with torch.no_grad():
+        with torch.inference_mode():
             output_ids = self.model.generate(**inputs, max_new_tokens=1024)
         
-        generated_ids = output_ids[0, inputs["input_ids"].shape[1]:]
-        return self.processor.decode(generated_ids, skip_special_tokens=True)
+        generated_ids = output_ids[:, inputs["input_ids"].shape[1]:]
+        return self.processor.batch_decode(generated_ids, skip_special_tokens=True)
 
 class GLMOCR(OCRProvider):
     @property
@@ -134,34 +151,45 @@ class GLMOCR(OCRProvider):
             raise e
 
     def run_ocr(self, image: Image.Image) -> str:
+        return self.run_ocr_batch([image])[0]
+
+    def run_ocr_batch(self, images: list[Image.Image]) -> list[str]:
         self.load()
         
-        # Prepare content for GLM-OCR
-        messages = [
-            {
-                "role": "user",
-                "content": [
-                    {"type": "image", "image": image}, 
-                    {"type": "text", "text": "Text Recognition:"}
-                ],
-            }
+        processed_images = []
+        for img in images:
+            max_size = 1540
+            if max(img.size) > max_size:
+                ratio = max_size / max(img.size)
+                new_size = (int(img.width * ratio), int(img.height * ratio))
+                img = img.resize(new_size, Image.LANCZOS)
+            processed_images.append(img)
+
+        # Prepare batch content for GLM-OCR
+        batch_messages = [
+            [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "image", "image": img}, 
+                        {"type": "text", "text": "Text Recognition:"}
+                    ],
+                }
+            ] for img in processed_images
         ]
         
-        inputs = self.processor.apply_chat_template(
-            messages,
-            tokenize=True,
-            add_generation_prompt=True,
-            return_dict=True,
-            return_tensors="pt"
-        ).to(self.model.device)
+        prompts = [
+            self.processor.apply_chat_template(m, add_generation_prompt=True, tokenize=False)
+            for m in batch_messages
+        ]
         
-        inputs.pop("token_type_ids", None)
+        inputs = self.processor(text=prompts, images=processed_images, return_tensors="pt", padding=True).to(self.device)
         
-        with torch.no_grad():
-            generated_ids = self.model.generate(**inputs, max_new_tokens=8192)
+        with torch.inference_mode():
+            output_ids = self.model.generate(**inputs, max_new_tokens=1024)
             
-        output_text = self.processor.decode(generated_ids[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True)
-        return output_text
+        generated_ids = output_ids[:, inputs["input_ids"].shape[1]:]
+        return self.processor.batch_decode(generated_ids, skip_special_tokens=True)
 
 # ======================
 # Helper Functions for Prompts
@@ -379,18 +407,33 @@ def process_document(input_path, pdl_path="PACE/Primary Data List.csv", progress
         log("PDF detected. Converting pages to images...")
         images = get_images_from_pdf(input_path)
         log(f"Total pages to process: {len(images)}")
-        for idx, img in enumerate(images):
-            log(f"--- Processing Page {idx + 1}/{len(images)} ---")
-            page_text = ocr_engine.run_ocr(img)
-            all_text += f"\n--- PAGE {idx + 1} ---\n{page_text}\n"
-            log(f"Page {idx + 1} OCR complete.")
+        
+        # Optimization: Use batched inference (Batch size = 2 for 8GB VRAM safety)
+        batch_size = 2
+        for i in range(0, len(images), batch_size):
+            batch = images[i : i + batch_size]
+            current_batch_num = (i // batch_size) + 1
+            total_batches = (len(images) + batch_size - 1) // batch_size
+            
+            log(f"--- Processing Batch {current_batch_num}/{total_batches} ({len(batch)} pages) ---")
+            
+            batch_results = ocr_engine.run_ocr_batch(batch)
+            
+            for j, page_text in enumerate(batch_results):
+                page_num = i + j + 1
+                all_text += f"\n--- PAGE {page_num} ---\n{page_text}\n"
+                log(f"Page {page_num} OCR complete.")
     else:
         log("Image detected. Starting OCR...")
         all_text = ocr_engine.run_ocr(Image.open(input_path))
         log("Image OCR complete.")
 
+    # Ensure extractions directory exists
+    extractions_dir = "extractions"
+    os.makedirs(extractions_dir, exist_ok=True)
+
     log("OCR Complete. Saving raw text...")
-    ocr_filename = f"ocr_raw_{ocr_engine.name.lower()}.txt"
+    ocr_filename = os.path.join(extractions_dir, f"ocr_raw_{ocr_engine.name.lower()}.txt")
     with open(ocr_filename, "w", encoding="utf-8") as f:
         f.write(all_text)
     log(f"Raw OCR text saved to {ocr_filename}")
@@ -406,7 +449,7 @@ def process_document(input_path, pdl_path="PACE/Primary Data List.csv", progress
         log(f"LLM Provider: {llm_engine.name}")
         result = llm_engine.structure_data(all_text, pdl_context, callback=log)
         
-        result_filename = f"result_OCR-{ocr_engine.name.upper()}_LLM-{llm_engine.name.upper()}.json"
+        result_filename = os.path.join(extractions_dir, f"result_OCR-{ocr_engine.name.upper()}_LLM-{llm_engine.name.upper()}.json")
         log(f"Saving results to {result_filename}...")
         with open(result_filename, "w", encoding="utf-8") as f:
             json.dump(result, f, indent=2)

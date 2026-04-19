@@ -274,7 +274,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Update summary
         if (!isError) {
-            extractionStats.textContent = `Successfully processed document and mapped ${mappedCount} fields to PDL.`;
+            const finalTime = document.getElementById('elapsed-timer').textContent;
+            extractionStats.innerHTML = `Successfully processed document and mapped ${mappedCount} fields to PDL. (Time: <span id="final-time" style="font-weight: 700; color: #065f46;">${finalTime}</span>)`;
             summaryCard.style.display = 'flex';
         }
 
