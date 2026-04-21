@@ -418,7 +418,10 @@ def process_document(input_path, pdl_path="PACE/Primary Data List.csv", progress
         log("SUCCESS: Document processing complete.")
         log(f"TOTAL DURATION: {int(mins)}m {int(secs)}s")
         log("="*30)
-        return result
+        return {
+            "structured_data": result,
+            "raw_text": all_text
+        }
     except Exception as e:
         duration = time.time() - start_time
         mins, secs = divmod(duration, 60)

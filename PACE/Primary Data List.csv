@@ -1,0 +1,211 @@
+NEW REF NUMB,DATA ELEMENT,ANSWER OPTIONS/VARIABLES,IMPORT/EXPORT CODES,LOGIC,VALIDATION RULES/FUZZY  LOGIC
+FOLLOW-UP FORM,,,,,
+Patient details,,,,,
+2.000,Title,"Mr
+Ms
+Mrs
+Miss
+Mx
+Dr
+Sr
+Master
+Fr
+Reverend
+Professor","MR = Mister
+MS = Ms
+MRS = Mrs
+MISS = Miss
+MX = Mx
+DR = Doctor
+SR =  Senior
+MSTR = MASTER
+FR = Father
+REV = Reverend
+PROF = Professor",,
+2.010,First name,Free text,Free text,,
+2.020,Last name,Free text,Free text,,
+2.090,Preferred phone number,"Free text (numerical, max 10 chars)
+","Free text
+Numerical, Area code and 8 digit space (max 10 char)
+(XX) XXXX XXXX",,"•	Standards Compliance: All phone numbers must conform to the E.164 numbering format
+
+•	Allowed Input Formats:
+o	May be entered with or without spaces, dashes, or parentheses for readability.
+o	Only accept as a domestic Australian number (see below).
+
+•	Australian Numbers:
+o	Domestic landline format: (0x) xxxx xxxx where x is a digit and 0x is a valid area code (e.g., 02, 03, 07, 08).
+o	Mobile format: (04) xxxx xxxx 
+•	Validation Checks:
+o	Strip spaces, dashes, and parentheses before validation.
+o	Ensure the number contains digits only.
+
+•	Examples:
+o	Valid: 03 1234 5678, 04 1234 5678
+o	Invalid: +61 123, 041234567890, +999 123 456 (invalid country code)"
+2.100,Additional phone number,"Free text (numerical, max 10 chars)
+","Free text
+Numerical (max char 10)
+(XX) XXXX XXXX",,"•	Standards Compliance: All phone numbers must conform to the E.164 numbering format
+
+•	Allowed Input Formats:
+o	May be entered with or without spaces, dashes, or parentheses for readability.
+o	Only accept as a domestic Australian number (see below).
+
+•	Australian Numbers:
+o	Domestic landline format: (0x) xxxx xxxx where x is a digit and 0x is a valid area code (e.g., 02, 03, 07, 08).
+o	Mobile format: (04) xxxx xxxx 
+•	Validation Checks:
+o	Strip spaces, dashes, and parentheses before validation.
+o	Ensure the number contains digits only.
+
+•	Examples:
+o	Valid: 03 1234 5678, 04 1234 5678
+o	Invalid: +61 123, 041234567890, +999 123 456 (invalid country code)"
+2.120,Address type,"Home, Business, Other","HOME = Home 
+BUS = Business
+OTH = Other",,
+2.130,Street address,Free text (alpha numerical),"Free text, alpha numerical",,
+2.140,Suburb,Free text,Free text,,
+2.150,Postcode,"Free text (numerical, max 4 chars)","Free text, numerical, max 4 char",,
+2.160,State,"Australian Capital Territory
+New South Wales
+Northern Territory
+Queensland
+South Australia
+Tasmania
+Victoria
+Western Australia
+Other
+Overseas","ACT = Australian Capital Territory
+NSW = New South Wales
+NT = Northern Territory
+QLD = Queensland
+SA = South Australia
+TAS = Tasmania
+VIC = Victoria
+WA = Western Australia
+OTH = Other
+OS = Overseas",,
+2.170,Country,Free text,Free text,"Default to ""Australia"" if 2.160 = ACT, NSW, NT, QLD, SA, TAS, VIC, WA, OTH",
+3.060,Date of birth,DD/MM/YYYY,DD/MM/YYYY,,"Cannot be future dated. 
+Patient must be between 0 and 125 years old. "
+3.070,Age on form completion,Free text,"Free text (numerical)  in export
+
+",,Derived from DOB (3.060).
+3.140,Gender,"Male
+Female
+Other
+Missing / not stated","1 = Male
+2 = Female
+3 = Other
+9 = Missing / not stated",,
+3.190,Indigenous status,"Aboriginal but not Torres Strait Islander origin
+Torres Strait Islander but not Aboriginal origin
+Both Aboriginal and Torres Strait Islander origin
+Neither Aboriginal nor Torres Strait Islander origin
+Missing / not stated","1 = Aboriginal but not Torres Strait Islander origin
+2 = Torres Strait Islander but not Aboriginal origin
+3 = Both Aboriginal and Torres Strait Islander origin
+4 = Neither Aboriginal nor Torres Strait Islander origin
+9 = Missing / not stated",,
+3.210,Medicare number,Free text (10 chars),"Free text (numerical, must be 10 chars)",,Medicare Check Digit Routine
+Collected data,,,,,
+6.070,Where are you staying at present?,"Residential aged care service
+Home with supports                                                          
+Home without supports                               
+Rehabilitation (inpatient)                                  Transitional care services                                       Hospital                                                                               Other                                                                                 Missing","1 = Residential aged care service
+3 = Home with supports                                             
+4 = Home without supports                                            
+5 = Rehabilitation (inpatient)                                     
+6 = Transitional care services                                
+7 = Hospital                                                                  
+9 = Other
+0 = Missing                                                                      ",,
+6.080,Do you live on your own?,"Yes, I live entirely on my own                                              No, I live with others                                                    Missing","1 = Yes, I live entirely on my own                             
+2 = No, I live with others                                                
+9 = Missing",,
+6.090,"Since you were in hospital for your stroke, have you had another stroke?","Yes, No, Unknown","1 = Yes, 2 = No, 9 = Unknown",,
+6.100,"Since you were in hospital for your stroke, have you been readmitted to hospital?","Yes, No, Unknown","1 = Yes, 2 = No, 9 = Unknown",,
+6.110,Date of readmission,DD/MM/YYYY,DD/MM/YYYY,Enabled if 6.100 = Yes,
+6.120,Date of readmission accuracy,"Accurate, Estimated","AAA= Accurate
+EAA= Estimate",Enabled if 6.100 = Yes,Accurate if 6.110 has full date
+6.150,Modified Rankin Score,"0 No symptoms                                                   
+1 No significant disability                                                                                     2 Slight disability                                                                                 3 Moderate disability                                            4 Moderately severe disability  
+5 Severe disability ","0 = 0 No symptoms         
+1 = 1 No significant disability                                     
+2 = 2 Slight disability                                                      
+3 = 3 Moderate disability                            
+4 = 4 Moderately severe disability                    
+5 = 5 Severe disability ",,
+6.160,"Thinking about your health today, which of the following statements best describes your mobility?","I have no problems in walking about
+ I have some problems in walking about
+I am confined to bed","1 = I have no problems in walking about                             
+2 = I have some problems in walking about                      
+3 = I am confined to bed",,
+6.170,"Thinking about your health today, which of the following statements best describes your self-care?",I have no problems with self-care                                            I have some problems washing or dressing myself                                                                            I am unable to wash or dress myself,"1 = I have no problems with self-care                             
+2 = I have some problems washing or dressing myself                                                                             3 = I am unable to wash or dress myself",,
+6.180,"Thinking about your health today, which of the following statements best describes your usual activities such as work, study, housework, family or leisure activities?",I have no problems with performing my usual activities                                                                                       I have some problems with performing my usual activities                                                                                    I am unable to perform my usual activities,"1 = I have no problems with performing my usual activities                                                                          2 = I have some problems with performing my usual activities                                                                          
+3 = I am unable to perform my usual activities",,
+6.190,"Thinking about your health today, which of the following statements best describes any pain or discomfort you may be experiencing?",I have no pain or discomfort                                                        I have moderate pain or discomfort                                         I have extreme pain or discomfort,"1 = I have no pain or discomfort                                            
+2 = I have moderate pain or discomfort                               
+3 = I have extreme pain or discomfort",,
+6.200,"Thinking about your health today, which of the following statements best describes any anxiety and depression you may be experiencing?","I am not anxious or depressed                                          
+I am moderately anxious or depressed                               I am extremely anxious or depressed","1 = I am not anxious or depressed                                         
+2 = I am moderately anxious or depressed                         
+3 = I am extremely anxious or depressed",,
+6.210,What number between 0 and 100 best describes your health today?,0- 100,"0- 100
+999 = Unknown",,
+6.270,Would you like to receive an information package from the Stroke Foundation about stroke and support services?         ,"Yes, No","1 = Yes, 2 = No",,
+6.280,Would you be willing to be contacted in the future to hear about possible stroke research projects that you may be eligible for?,"Yes, No","1 = Yes, 2 = No",,
+Contact information,,,,,
+9.010,First name,Free text,Free text,Infer from 2.010 if 9.290 = Patient,
+9.020,Last name,Free text,Free text,Infer from 2.020 if 9.290 = Patient,
+9.030,Preferred phone number,"Free text (numerical, max 10 chars)
+","Free text
+Numerical, Area code and 8 digit space (max 10 char)
+(XX) XXXX XXXX",Infer from 2.090 if 9.290 = Patient,"•	Standards Compliance: All phone numbers must conform to the E.164 numbering format
+
+•	Allowed Input Formats:
+o	May be entered with or without spaces, dashes, or parentheses for readability.
+o	Only accept as a domestic Australian number (see below).
+
+•	Australian Numbers:
+o	Domestic landline format: (0x) xxxx xxxx where x is a digit and 0x is a valid area code (e.g., 02, 03, 07, 08).
+o	Mobile format: (04) xxxx xxxx 
+•	Validation Checks:
+o	Strip spaces, dashes, and parentheses before validation.
+o	Ensure the number contains digits only.
+
+•	Examples:
+o	Valid: 03 1234 5678, 04 1234 5678
+o	Invalid: +61 123, 041234567890, +999 123 456 (invalid country code)"
+9.280,Form completed on,DD/MM/YYYY,DD/MM/YYYY,,Cannot be future dated.
+9.290,Form completed by,"Patient                                                             Spouse/Partner                                             
+Son/daughter                                                                 Sibling                                                                              Other relative                                            
+Friend/associate                                                   Professional carer                                                              Not stated/inadequately described","0 = Patient                                                                         
+1 = Spouse/Partner                                                       
+2 = Son/daughter
+3 = Other relative                                                             
+4 = Friend/associate                                                      
+5 = Professional carer                                              
+6 = Sibling                                                                   
+9 = Not stated/inadequately described",,
+9.310,Relationship to patient,"Spouse/Partner
+Child
+Sibling
+Parent
+Grandchild
+Other Relative
+Friend/Associate
+Professional Carer
+Not stated/inadequately described","SP = Spouse/Partner
+CH = Child
+SIB = Sibling
+PAR = Parent
+FA = Friend/Associate
+GC = Grandchild
+OR = Other Relative
+PC = Professional Carer
+NS = Not stated/inadequately described ",,
+9.999,Additional comments,Free text,Free text,,

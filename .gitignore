@@ -10,7 +10,6 @@
 *.onnx
 
 # Specific heavy folders
-PACE/
 GLM-OCR/
 LightOnOCR-2-1B/
 

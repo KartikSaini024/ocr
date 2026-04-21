@@ -177,6 +177,36 @@ async def get_result(job_id: str):
 async def get_mapping():
     return JSONResponse(content={"mapping": pdl_mapping, "values": pdl_value_mapping})
 
+@app.get("/api/raw-text/{job_id}")
+async def get_raw_text(job_id: str):
+    if job_id not in job_manager.jobs:
+        return JSONResponse(status_code=404, content={"error": "Job not found"})
+
+    job = job_manager.jobs[job_id]
+
+    if job["status"] == "processing":
+        return JSONResponse(content={"status": "processing"})
+
+    if job["status"] == "error":
+        raw_text = None
+        if isinstance(job["result"], dict):
+            raw_text = job["result"].get("raw_text")
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "error": job["error"], "raw_text": raw_text}
+        )
+
+    result = job["result"] or {}
+    raw_text = result.get("raw_text") if isinstance(result, dict) else None
+
+    return JSONResponse(content={
+        "status": "success",
+        "raw_text": raw_text
+    })
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
+
+
