@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical OCR AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <main class="container">
+        <header>
+            <div class="badge">V2.0 FLASH</div>
+            <h1>Medical <span>OCR Extraction</span></h1>
+            <p>GPU-accelerated medical document extraction & PDL mapping.</p>
+        </header>
+
+        <section id="upload-section" class="upload-section">
+            <div id="drop-zone" class="drop-zone">
+                <input type="file" id="file-input" accept=".pdf" hidden>
+                <div class="drop-zone-content">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <h3>Drag & Drop your Medical File</h3>
+                    <p>or click to browse from your computer (PDF only)</p>
+                </div>
+            </div>
+            
+            <div id="loading" class="loading-state hidden">
+                <div class="spinner-container">
+                    <div class="spinner"></div>
+                </div>
+                <div class="loading-text">
+                    <h3 id="loading-status">Processing...</h3>
+                    <div class="progress-bar-container">
+                        <div id="progress-bar-fill" class="progress-bar-fill"></div>
+                    </div>
+                    <div class="progress-bar-text" id="progress-bar-text">0%</div>
+                    <div id="timer-container" class="timer-container">
+                        <span class="timer-label">Elapsed Time:</span>
+                        <span id="elapsed-timer" class="elapsed-timer">00:00.0</span>
+                    </div>
+                    <p>Extracting text and mapping to Primary Data List.</p>
+                </div>
+                <!-- Processing Logs Area -->
+                <div id="logs-container" class="logs-container">
+                    <div class="logs-header">Processing Logs</div>
+                    <div id="logs-content" class="logs-content"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="results-section" class="results-section hidden">
+            <div class="results-header">
+                <h2>Extracted Data (Mapped to PDL)</h2>
+                <div class="actions">
+                    <button class="btn btn-secondary" onclick="exportJSON()">Export JSON</button>
+                    <button id="reset-btn" class="btn btn-primary">Process Another File</button>
+                </div>
+            </div>
+            
+            <div class="summary-card" id="summary-card" style="display: none;">
+                <div class="summary-main">
+                    <div class="summary-status">
+                        <div class="success-icon">
+                            <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                        </div>
+                        <div class="summary-content">
+                            <h3>Extraction Complete</h3>
+                            <p id="extraction-stats">Successfully processed document and mapped to PDL. (Time: <span id="final-time">00:00</span>)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="confidence-container" id="confidence-container" style="display: none;">
+                        <div class="confidence-label">Confidence Score</div>
+                        <div class="confidence-badge" id="confidence-badge">95%</div>
+                    </div>
+                </div>
+
+                <div class="ai-insights" id="ai-insights" style="display: none;">
+                    <div class="insight-row" id="comment-row" style="display: none;">
+                        <div class="insight-label">AI Summary</div>
+                        <div class="insight-text" id="extraction-comment"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="results-grid" class="results-grid">
+                <!-- Data will be populated here -->
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

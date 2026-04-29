@@ -28,4 +28,4 @@ temp_uploads/
 ocr_raw_*.txt
 result_*.json
 share/
-static/
+PACE/test_data
