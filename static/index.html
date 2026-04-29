@@ -34,7 +34,11 @@
                     <div class="spinner"></div>
                 </div>
                 <div class="loading-text">
-                    <h3 id="loading-status">Processing with GPU...</h3>
+                    <h3 id="loading-status">Processing...</h3>
+                    <div class="progress-bar-container">
+                        <div id="progress-bar-fill" class="progress-bar-fill"></div>
+                    </div>
+                    <div class="progress-bar-text" id="progress-bar-text">0%</div>
                     <div id="timer-container" class="timer-container">
                         <span class="timer-label">Elapsed Time:</span>
                         <span id="elapsed-timer" class="elapsed-timer">00:00.0</span>
@@ -59,21 +63,31 @@
             </div>
             
             <div class="summary-card" id="summary-card" style="display: none;">
-                <div style="display: flex; align-items: center; gap: 1.5rem; flex: 1;">
-                    <div class="success-icon">
-                        <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6" stroke="currentColor" stroke-width="2">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                        </svg>
+                <div class="summary-main">
+                    <div class="summary-status">
+                        <div class="success-icon">
+                            <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                        </div>
+                        <div class="summary-content">
+                            <h3>Extraction Complete</h3>
+                            <p id="extraction-stats">Successfully processed document and mapped to PDL. (Time: <span id="final-time">00:00</span>)</p>
+                        </div>
                     </div>
-                    <div class="summary-content">
-                        <h3>Extraction Complete</h3>
-                        <p id="extraction-stats">Successfully processed document and mapped to PDL. (Time: <span id="final-time">00:00</span>)</p>
+                    
+                    <div class="confidence-container" id="confidence-container" style="display: none;">
+                        <div class="confidence-label">Confidence Score</div>
+                        <div class="confidence-badge" id="confidence-badge">95%</div>
                     </div>
                 </div>
-                <div class="confidence-container" id="confidence-container" style="display: none;">
-                    <div class="confidence-label">Confidence Score</div>
-                    <div class="confidence-badge" id="confidence-badge">95%</div>
+
+                <div class="ai-insights" id="ai-insights" style="display: none;">
+                    <div class="insight-row" id="comment-row" style="display: none;">
+                        <div class="insight-label">AI Summary</div>
+                        <div class="insight-text" id="extraction-comment"></div>
+                    </div>
                 </div>
             </div>
 

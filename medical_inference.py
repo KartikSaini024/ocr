@@ -214,7 +214,12 @@ def get_structure_prompt(ocr_text: str, pdl_context: str) -> str:
         - STRICT RULE: You MUST return EVERY SINGLE reference number from the PDL in your final JSON output, without exception.
         - If the OCR text does NOT contain ANY evidence or data for a reference number (i.e. the OCR missed it entirely), set the value to EXACTLY the string "NOT_EXTRACTED".
         - If the OCR text shows the field exists but it was left intentionally blank by the patient, set the value to null.
-        - For the "processing_confidence", calculate a score between 0-100. Deduct points heavily for every "NOT_EXTRACTED" value. A perfect extraction of all available data is 100.
+        - Evaluate the overall extraction quality and provide an integer for "processing_confidence" (0-100) and a string for "extraction_summary_comment".
+          The "processing_confidence" should be a balance of:
+          1. Data Completeness: How much of the form data was picked up by the OCR? (Lower the score if expected sections of the form are completely missing from the OCR).
+          2. Data Accuracy: How clear, legible, and unambiguous is the data that WAS picked up? (Lower the score for garbled text, bad handwriting, or ambiguous mappings).
+          3. Intentional Blanks: Do NOT penalize the score for fields intentionally left blank by the patient (mapped to null). A perfectly clean OCR extraction of a mostly blank form should still have a very high confidence score. You must differentiate between "OCR failed to capture this area (NOT_EXTRACTED)" vs "Patient left it blank (null)".
+        - The "extraction_summary_comment" MUST be a concise one-line summary. It MUST explicitly state if any fields were completely missed by OCR (NOT_EXTRACTED) or were mapped with high uncertainty.
         
         PDL REFERENCE:
         {pdl_context}
@@ -388,11 +393,15 @@ def load_pdl(csv_path):
 
 def process_document(input_path, pdl_path="PACE/Primary Data List.csv", progress_callback=None):
     start_time = time.time()
-    def log(msg):
+    def log(msg, progress=None):
         timestamp = time.strftime("%H:%M:%S")
         formatted_msg = f"[{timestamp}] {msg}"
         print(formatted_msg)
-        if progress_callback: progress_callback(formatted_msg)
+        if progress_callback: 
+            try:
+                progress_callback(msg=formatted_msg, progress=progress)
+            except TypeError:
+                progress_callback(formatted_msg)
 
     if not os.path.exists(input_path):
         raise FileNotFoundError(f"Error: {input_path} not found.")
@@ -406,9 +415,9 @@ def process_document(input_path, pdl_path="PACE/Primary Data List.csv", progress
     all_text = ""
 
     if input_path.lower().endswith(".pdf"):
-        log("PDF detected. Converting pages to images...")
+        log("PDF detected. Converting pages to images...", progress=5)
         images = get_images_from_pdf(input_path)
-        log(f"Total pages to process: {len(images)}")
+        log(f"Total pages to process: {len(images)}", progress=10)
         
         # Optimization: Use batched inference (Batch size = 2 for 8GB VRAM safety)
         batch_size = 2
@@ -417,7 +426,7 @@ def process_document(input_path, pdl_path="PACE/Primary Data List.csv", progress
             current_batch_num = (i // batch_size) + 1
             total_batches = (len(images) + batch_size - 1) // batch_size
             
-            log(f"--- Processing Batch {current_batch_num}/{total_batches} ({len(batch)} pages) ---")
+            log(f"--- Processing Batch {current_batch_num}/{total_batches} ({len(batch)} pages) ---", progress=10 + int(60 * (i / len(images))))
             
             batch_results = ocr_engine.run_ocr_batch(batch)
             
@@ -425,16 +434,17 @@ def process_document(input_path, pdl_path="PACE/Primary Data List.csv", progress
                 page_num = i + j + 1
                 all_text += f"\n--- PAGE {page_num} ---\n{page_text}\n"
                 log(f"Page {page_num} OCR complete.")
+        log("All PDF pages OCR complete.", progress=75)
     else:
-        log("Image detected. Starting OCR...")
+        log("Image detected. Starting OCR...", progress=10)
         all_text = ocr_engine.run_ocr(Image.open(input_path))
-        log("Image OCR complete.")
+        log("Image OCR complete.", progress=75)
 
     # Ensure extractions directory exists
     extractions_dir = "extractions"
     os.makedirs(extractions_dir, exist_ok=True)
 
-    log("OCR Complete. Saving raw text...")
+    log("OCR Complete. Saving raw text...", progress=80)
     ocr_filename = os.path.join(extractions_dir, f"ocr_raw_{ocr_engine.name.lower()}.txt")
     with open(ocr_filename, "w", encoding="utf-8") as f:
         f.write(all_text)
@@ -448,11 +458,13 @@ def process_document(input_path, pdl_path="PACE/Primary Data List.csv", progress
         log("Warning: PDL context is empty or file missing.")
 
     try:
-        log(f"LLM Provider: {llm_engine.name}")
-        result = llm_engine.structure_data(all_text, pdl_context, callback=log)
+        log(f"LLM Provider: {llm_engine.name}", progress=85)
+        def llm_callback(msg):
+            log(msg, progress=90)
+        result = llm_engine.structure_data(all_text, pdl_context, callback=llm_callback)
         
         result_filename = os.path.join(extractions_dir, f"result_OCR-{ocr_engine.name.upper()}_LLM-{llm_engine.name.upper()}.json")
-        log(f"Saving results to {result_filename}...")
+        log(f"Saving results to {result_filename}...", progress=95)
         with open(result_filename, "w", encoding="utf-8") as f:
             json.dump(result, f, indent=2)
         
@@ -460,7 +472,7 @@ def process_document(input_path, pdl_path="PACE/Primary Data List.csv", progress
         mins, secs = divmod(duration, 60)
         
         log("="*30)
-        log("SUCCESS: Document processing complete.")
+        log("SUCCESS: Document processing complete.", progress=100)
         log(f"TOTAL DURATION: {int(mins)}m {int(secs)}s")
         log("="*30)
         return result

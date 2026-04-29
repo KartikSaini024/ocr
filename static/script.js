@@ -111,6 +111,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const logsContent = document.getElementById('logs-content');
         logsContent.innerHTML = '';
         
+        // Reset progress bar
+        const progressBarFill = document.getElementById('progress-bar-fill');
+        const progressBarText = document.getElementById('progress-bar-text');
+        if (progressBarFill && progressBarText) {
+            progressBarFill.style.width = '0%';
+            progressBarText.textContent = '0%';
+        }
+        
         const formData = new FormData();
         formData.append('file', file);
 
@@ -156,6 +164,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Auto-scroll
                 logsContent.scrollTop = logsContent.scrollHeight;
+                
+                // Update progress bar
+                if (data.progress !== undefined) {
+                    const progressBarFill = document.getElementById('progress-bar-fill');
+                    const progressBarText = document.getElementById('progress-bar-text');
+                    if (progressBarFill && progressBarText) {
+                        const pct = Math.min(Math.max(data.progress, 0), 100);
+                        progressBarFill.style.width = `${pct}%`;
+                        progressBarText.textContent = `${pct}%`;
+                    }
+                }
             } 
             else if (data.status === 'completed') {
                 eventSource.close();
@@ -230,11 +249,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     else if (confScore >= 50) confidenceBadge.classList.add('conf-med');
                     else confidenceBadge.classList.add('conf-low');
                     
+                    const insightsPanel = document.getElementById('ai-insights');
+
+                    const commentRow = document.getElementById('comment-row');
+                    const commentText = document.getElementById('extraction-comment');
+                    if (data.extraction_summary_comment && commentText && commentRow) {
+                        commentText.textContent = data.extraction_summary_comment;
+                        commentRow.style.display = 'flex';
+                        if (insightsPanel) insightsPanel.style.display = 'flex';
+                    }
+                    
                     confidenceContainer.style.display = 'flex';
                 }
                 
                 // Remove from displayData so it doesn't render as a card
                 delete displayData.processing_confidence;
+                delete displayData.extraction_summary_comment;
+            }
+            
+            // Catch-all to remove summary even without confidence score key
+            if (displayData.extraction_summary_comment !== undefined) {
+                delete displayData.extraction_summary_comment;
             }
         }
 
@@ -296,6 +331,13 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadSection.classList.remove('hidden');
         dropZone.classList.remove('hidden');
         confidenceContainer.style.display = 'none';
+        
+        const insightsPanel = document.getElementById('ai-insights');
+        if (insightsPanel) insightsPanel.style.display = 'none';
+        
+        const commentRow = document.getElementById('comment-row');
+        if (commentRow) commentRow.style.display = 'none';
+        
         fileInput.value = '';
         lastExtractedData = null;
     });

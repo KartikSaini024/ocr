@@ -113,11 +113,14 @@ async def read_index():
 async def run_background_process(job_id: str, temp_path: str):
     try:
         loop = asyncio.get_running_loop()
-        def sync_callback(msg):
+        def sync_callback(msg, progress=None):
             # Safe way to call async code from another thread
             import json
+            payload = {"status": "processing", "message": msg}
+            if progress is not None:
+                payload["progress"] = progress
             asyncio.run_coroutine_threadsafe(
-                job_manager.add_log(job_id, json.dumps({"status": "processing", "message": msg})),
+                job_manager.add_log(job_id, json.dumps(payload)),
                 loop
             )
 
